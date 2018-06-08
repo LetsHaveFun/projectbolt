@@ -9,7 +9,7 @@ function getRatingsByAnswerIdQuery(answerID) {
 }
 
 function getNonBannedRatingsByAnswerIdQuery(answerID) {
-    var query  = `SELECT Ratings.Rating 
+    var query  = `SELECT Ratings.Rating
                 FROM Ratings 
                 INNER JOIN Users ON Ratings.UserID=Users.ID 
                 WHERE AnswerID = @answerID AND Users.Banned = 0`;
@@ -71,11 +71,35 @@ function getQuestionTextByIdQuery(questionID) {
     return {query: query, params: params};
 }
 
+function getQuestionIdByTextQuery(question) {
+    var query = "SELECT ID FROM Questions WHERE Question = @question";
+    var params = [
+        {paramName: "question", paramType: TYPES.NVarChar, paramValue: question}
+    ]
+    return {query: query, params: params};
+}
+
+function getUserIdByQuestionIdQuery(questionID) {
+    var query = "SELECT UserID FROM Questions WHERE ID in ( @questionID )";
+    var params = [
+        {paramName: "questionID", paramType: TYPES.Int, paramValue: questionID}
+    ]
+    return {query: query, params: params};
+}
+
 function getInsertQuestionQuery(question, userID) {
     var query  = "INSERT INTO Questions (Question, UserID) VALUES ( @question , @userID )";
     var params = [
         {paramName: "question", paramType: TYPES.NVarChar, paramValue: question},
         {paramName: "userID", paramType: TYPES.Int, paramValue: userID}
+    ]
+    return {query: query, params: params};
+}
+
+function getDeleteQuestionQuery(questionID) {
+    var query  = "DELETE FROM Questions WHERE ID = @questionID";
+    var params = [
+        {paramName: "questionID", paramType: TYPES.Int, paramValue: questionID}
     ]
     return {query: query, params: params};
 }
@@ -87,6 +111,26 @@ function getAnswersByQuestionIdQuery(questionID) {
                 WHERE QuestionID in ( @questionID )`;
     var params = [
         {paramName: "questionID", paramType: TYPES.Int, paramValue: questionID}
+    ]
+    return {query: query, params: params};
+}
+
+function getUsernameByAnswerQuery(questionID, answer) {
+    var query = `SELECT Users.FirstName 
+                FROM Answers
+                INNER JOIN Users ON Answers.UserID=Users.ID 
+                WHERE QuestionID in ( @questionID ) AND Answer = @answer`;
+    var params = [
+        {paramName: "questionID", paramType: TYPES.Int, paramValue: questionID},
+        {paramName: "answer", paramType: TYPES.NVarChar, paramValue: answer}
+    ]
+    return {query: query, params: params};
+}
+
+function getUserIdByAnswerIdQuery(answerID) {
+    var query = "SELECT UserID FROM Answers WHERE ID = @answerID";
+    var params = [
+        {paramName: "answerID", paramType: TYPES.Int, paramValue: answerID}
     ]
     return {query: query, params: params};
 }
@@ -103,13 +147,21 @@ function getNonBannedAnswersByQuestionIdQuery(questionID) {
 }
 
 function getInsertAnswerQuery(answer, questionID, userID) {
-    var query = "INSERT INTO answers (answer, questionid, userid) VALUES ( @answer , @questionID , @userID )";
+    var query = "INSERT INTO Answers (answer, questionid, userid) VALUES ( @answer , @questionID , @userID )";
     var params = [
         {paramName: "questionID", paramType: TYPES.Int, paramValue: questionID},
         {paramName: "userID", paramType: TYPES.Int, paramValue: userID},
         {paramName: "answer", paramType: TYPES.NVarChar, paramValue: answer}
     ]
     return {query: query, params: params}; 
+}
+
+function getDeleteAnswerQuery(answerID) {
+    var query  = "DELETE FROM Answers WHERE ID = @answerID";
+    var params = [
+        {paramName: "answerID", paramType: TYPES.Int, paramValue: answerID}
+    ]
+    return {query: query, params: params};
 }
 
 function getUsernamesBannedStatusQuery() {
@@ -175,11 +227,17 @@ exports.getUpdateRatingQuery = getUpdateRatingQuery;
 exports.getAllQuestionsQuery = getAllQuestionsQuery;
 exports.getAllNonBannedQuestionsQuery = getAllNonBannedQuestionsQuery;
 exports.getQuestionTextByIdQuery = getQuestionTextByIdQuery;
+exports.getQuestionIdByTextQuery = getQuestionIdByTextQuery;
+exports.getUserIdByQuestionIdQuery = getUserIdByQuestionIdQuery;
 exports.getInsertQuestionQuery = getInsertQuestionQuery;
+exports.getDeleteQuestionQuery = getDeleteQuestionQuery;
 
 exports.getAnswersByQuestionIdQuery = getAnswersByQuestionIdQuery;
+exports.getUsernameByAnswerQuery = getUsernameByAnswerQuery;
+exports.getUserIdByAnswerIdQuery = getUserIdByAnswerIdQuery;
 exports.getNonBannedAnswersByQuestionIdQuery = getNonBannedAnswersByQuestionIdQuery;
 exports.getInsertAnswerQuery = getInsertAnswerQuery;
+exports.getDeleteAnswerQuery = getDeleteAnswerQuery;
 
 exports.getUsernamesBannedStatusQuery = getUsernamesBannedStatusQuery;
 exports.getIdPasswordByUsernameQuery = getIdPasswordByUsernameQuery;

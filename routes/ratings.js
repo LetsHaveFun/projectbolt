@@ -13,8 +13,7 @@ router.get('/get-all-ratings/:answerID/:sessionID', function(req, res, next) {
         database.getNonBannedRatingsByAnswerId(answerID).then((ratings) => {
             res.json(ratings);
         }).catch((reason) => {
-            console.log('Handle rejected promise ('+reason+') here.');
-            res.status(500).send('Something broke! ' + reason)
+            res.status(500).send(reason.toString());
         }); 
     }
     else {
@@ -23,19 +22,18 @@ router.get('/get-all-ratings/:answerID/:sessionID', function(req, res, next) {
 });
 
 /* GET the rating regarding a specific answer and user combination */
-router.get('/get-rating-answer-user/:answerID/:userID/:sessionID', function(req, res, next) {
+router.get('/get-rating-answer-user/:answerID/:sessionID', function(req, res, next) {
     let answerID = req.params["answerID"];
-    let userID = req.params["userID"];
     let sessionID = req.params["sessionID"];
 
     if (Number.isInteger(parseInt(answerID)) &&
-        Number.isInteger(parseInt(userID)) &&
         login.sessionValid(sessionID)) {
+        let userID = login.getSessionData(sessionID)["userID"];
+
         database.getRatingByAnswerIdAndUserId(answerID, userID).then((rating) => {
             res.json(rating);
         }).catch((reason) => {
-            console.log('Handle rejected promise ('+reason+') here.');
-            res.status(500).send('Something broke! ' + reason)
+            res.status(500).send(reason.toString());
         });
     }
     else {
@@ -46,19 +44,27 @@ router.get('/get-rating-answer-user/:answerID/:userID/:sessionID', function(req,
 /* Insert a rating */
 router.post('/insert-rating', function(req, res, next) {    
     let answerID = req.body.answerID;
-    let userID = req.body.userID;
     let rating = req.body.rating;
     let sessionID = req.body.sessionID;
 
     if (Number.isInteger(parseInt(answerID)) &&
-        Number.isInteger(parseInt(userID)) &&
         Number.isInteger(parseInt(rating)) &&
         login.sessionValid(sessionID)) {
-        database.insertRating(answerID, userID, rating).then(() => {
-            res.status(200).send("Insert succesful");
+        let userID = login.getSessionData(sessionID)["userID"];
+        
+        database.getUserIdByAnswerId(answerID).then((answerUserID) => {
+            if(answerUserID[0].UserID !== userID) {
+                database.insertRating(answerID, userID, rating).then(() => {
+                    res.status(200).send("Insert rating succesful");
+                }).catch((reason) => {
+                    res.status(500).send(reason.toString());
+                }); 
+            }
+            else {
+                res.status(500).send("Not allowed to rate own answers");
+            }            
         }).catch((reason) => {
-            console.log('Handle rejected promise ('+reason+') here.');
-            res.status(500).send('Something broke! ' + reason)
+            res.status(500).send(reason.toString());
         }); 
     }
     else {
@@ -69,19 +75,18 @@ router.post('/insert-rating', function(req, res, next) {
 /* Update a rating */
 router.post('/update-rating', function(req, res, next) {    
     let answerID = req.body.answerID;
-    let userID = req.body.userID;
     let rating = req.body.rating;
     let sessionID = req.body.sessionID;
 
     if (Number.isInteger(parseInt(answerID)) &&
-        Number.isInteger(parseInt(userID)) &&
         Number.isInteger(parseInt(rating)) &&
         login.sessionValid(sessionID)) {
+        let userID = login.getSessionData(sessionID)["userID"];
+
         database.updateRating(answerID, userID, rating).then(() => {
-            res.status(200).send("Update succesful");
+            res.status(200).send("Update rating succesful");
         }).catch((reason) => {
-            console.log('Handle rejected promise ('+reason+') here.');
-            res.status(500).send('Something broke! ' + reason)
+            res.status(500).send(reason.toString());
         }); 
     }
     else {

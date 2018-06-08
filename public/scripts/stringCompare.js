@@ -12,10 +12,10 @@ const stringCompare = function() {
         var questionSimilarityMapping = new Map();
         var sessionID = sessionStorage.getItem('projectBoltSessionID');
 
-        console.log("Sending request");
+        console.log("Retrieving all questions");
         $.getJSON( "questions/get-all-questions/"+sessionID, function() {})
         .done(function(data) {
-            console.log("Request complete");
+            console.log("All questions receieved");
             $.each( data, function( key, val ) {
                 questionSet.push(val["Question"]);
             });
@@ -35,8 +35,9 @@ const stringCompare = function() {
             stringCompare.autoCompleter.list = optionsArray;
             stringCompare.autoCompleter.evaluate();
         })
-        .fail(function() {
-            console.log( "error");
+        .fail(function(message) {
+            unfoldingHeader.unfoldHeader("Failed retrieving questions, see console for details", "red", true);
+            console.log("Failed retrieving all questions: " + message.responseText);
         })
     }
 
@@ -70,6 +71,7 @@ const stringCompare = function() {
         }
     }
 
+    //Check if the question is similar to one other previous asked questions
     const mapSimilarities = function(question, originalQuery, sanitizedQuery, questionSimilarityMapping)
     {
         var questionSimilarity = getSimilarity(question, originalQuery, sanitizedQuery);
@@ -311,7 +313,6 @@ const stringCompare = function() {
         getSentenceOccurenceSimilarity: getSentenceOccurenceSimilarity
     }
 }();
-//  ============================================================== */
 
 $(document).ready(function() {
     var input = document.getElementById("questionBox");

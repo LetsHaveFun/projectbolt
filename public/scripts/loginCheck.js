@@ -14,18 +14,17 @@ const loginCheck = function() {
           console.log("Request complete");
           let banned = bannedJSON[0].Banned;
           if (!banned) {
-            document.getElementById("loader").style.display = "none";
-            document.getElementById("mainContainer").style.display = "block";
             $.holdReady(false);
           }
           else
           {
             sessionStorage.removeItem("projectBoltSessionID");
-            global.redirect("login");
+            unfoldingHeader.unfoldHeader("Your account has been suspended.", "red", true);
+            setTimeout(function(){global.redirect("login")}, 3000);
           }  
         })
         .fail(function () {
-            console.log("error");
+            console.log("Ajax request failed");
         })
       }
       else
@@ -35,6 +34,7 @@ const loginCheck = function() {
       }        
     })
     .fail(function () {
+      console.log("Ajax request failed");
       sessionStorage.removeItem("projectBoltSessionID");
       global.redirect("login");
     })    

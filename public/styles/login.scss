@@ -1,6 +1,7 @@
+@import "mixins";
+
 /* CHANGES ONLY ACCEPTED IN THE .SCSS NOT .CSS
  ============================================================== */
-// any-hover instead of hover
 // display should be first property
 // background-colors should be last property
 
@@ -17,37 +18,6 @@ $break-largest: 1000px;
 $darkBlue: #19354E;
 $grey: #8190A5;
 
-/* Mixins
- ============================================================== */
-/// Mixin to prefix a property
-/// @author Hugo Giraudel
-/// @param {String} $property - Property name
-/// @param {*} $value - Property value
-/// @param {List} $prefixes (()) - List of prefixes to print
-@mixin prefix($property, $value, $prefixes: ()) {
-  @each $prefix in $prefixes {
-    #{'-' + $prefix + '-' + $property}: $value;
-  }
-
-  // Output standard non-prefixed declaration
-  #{$property}: $value;
-}
-
-// Example: @include prefix(transform, rotate(45deg), webkit ms);
-
-@mixin absoluteZero {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
-@mixin barlowFont($fontSize) {
-  font-family: 'Barlow', sans-serif;
-  font-size: $fontSize;
-}
-
 // Reusable
 .fieldBox {
   @include barlowFont(1em);
@@ -57,7 +27,7 @@ $grey: #8190A5;
   padding: 8px;
   outline: none;
   @include prefix(box-sizing, border-box, webkit moz);
-  @include prefix(transition, .3s time, webkit moz ms o);
+  @include prefix(transition, all .3s, webkit moz ms o);
 
   &:focus {
     border-color: $darkBlue;
@@ -141,28 +111,17 @@ body {
         align-items: center;
         width: 10.5%;
         margin-right: 10px;
-        margin-top: 1px;
+        margin-top: 5.5px;
 
         //background-color: green;
 
-        .circleContainer {
-          $circleContainerWidth: 100%;
+        .thunderLogoImgContainer {
+          width: 100%;
 
-          position: relative; // so the absolutely position .circle is relative to this
-          width: $circleContainerWidth;
-          padding-top: $circleContainerWidth;
+          //background-color: lightyellow;
 
-          //background-color: brown;
-
-          .circle {
-            @include absoluteZero;
-            border-radius: 50%;
-
-            background-color: $darkBlue;
-
-            .thunderLogo {
-              width: 100%;
-            }
+          .thunderLogo {
+            width: 100%;
           }
         }
       }

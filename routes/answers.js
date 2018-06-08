@@ -16,12 +16,29 @@ router.get('/:questionID/:sessionID', function(req, res, next) {
       database.getNonBannedAnswersByQuestionId(questionID).then((answers) => {
         res.json(questionText.concat(answers));
       }).catch((reason) => {
-        console.log('Handle rejected promise ('+reason+') here.');
-        res.status(500).send('Something broke! ' + reason);
+        res.status(500).send(reason.toString());
       });
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason);
+      res.status(500).send(reason.toString());
+    });
+  }
+  else {
+    res.status(500).send('Invalid request');
+  }     
+});
+
+/* GET the userID from a specific answer */
+router.get('/get-userID/:answerID/:sessionID', function(req, res, next) {
+  let answerID = req.params["answerID"]; 
+  let sessionID = req.params["sessionID"];
+
+  if (Number.isInteger(parseInt(answerID)) && 
+      login.sessionValid(sessionID))
+  {
+    database.getUserIdByAnswerId(answerID).then((userID) => {
+      res.status(200).send(userID);
+    }).catch((reason) => {
+      res.status(500).send(reason.toString());
     });
   }
   else {
@@ -39,17 +56,69 @@ router.post('/add-answer', function(req, res) {
   if (Number.isInteger(parseInt(questionID)) &&
       Number.isInteger(parseInt(userID)) && 
       login.sessionValid(sessionID)) {
-    database.insertAnswer(answer, questionID, userID).then(() => {
-      res.status(200).send("Insert succesful");
+    database.getUserIdByQuestionId(questionID).then((questionUserID) => {
+      if (questionUserID[0].UserID !== parseInt(userID)) {
+        database.insertAnswer(answer, questionID, userID).then(() => {
+          database.getUsernameByAnswer(questionID, answer).then((username) => {
+            database.getUserIdByQuestionId(questionID).then((questionUserID) => {
+              if (questionUserID[0].UserID !== parseInt(userID)) {
+                res.status(200).send({ response: "Insert successful", username: username });
+              }
+              else {
+                res.status(500).send("Not allowed to answer own questions");
+              }          
+            })
+            .catch((reason) => {
+              res.status(500).send(reason.toString());
+            });
+          })
+          .catch((reason) => {
+            res.status(500).send(reason.toString());
+          });
+        })
+        .catch((reason) => {
+          res.status(500).send(reason.toString())
+        });
+      }
+      else {
+        res.status(500).send("Not allowed to answer own questions");
+      }          
     })
     .catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });
   }
   else {
     res.status(500).send('Invalid request');
   }
+});
+
+/* DELETE an answer */
+router.post('/remove-answer', function(req, res) {
+    let answerID = req.body.answerID;
+    let sessionID = req.body.sessionID;
+
+    if (Number.isInteger(parseInt(answerID)) && login.sessionValid(sessionID)) {
+      login.isTeacher(sessionID).then((isTeacher) => {
+        if (isTeacher) {
+          database.deleteAnswer(answerID).then(() => {
+            res.status(200).send("Delete successful");
+          })
+          .catch((reason) => {
+            res.status(500).send(reason.toString());
+          });
+        }
+        else {
+          res.status(500).send('Invalid request');
+        }        
+      })
+      .catch((reason) => {
+          res.status(500).send(reason.toString());
+      });      
+    }
+    else {
+      res.status(500).send('Invalid request');
+    }
 });
 
 module.exports = router;

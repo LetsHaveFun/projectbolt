@@ -47,12 +47,24 @@ const global = function() {
     }
   };
 
+  const showLoader = function() {
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("mainContainer").style.display = "none";
+  } 
+
+  const hideLoader = function() {
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+  } 
+
   const redirect = function redirect(route) {
-    if(window.location.href.includes("localhost")) {
-      window.location.href = "http://localhost:3000/"+route;
+    if(window.location.href.includes("projectboltrenew.azurewebsites")) {
+      window.location.href = "https://projectboltrenew.azurewebsites.net/"+route;
     }
     else {
-      window.location.href = "https://projectboltrenew.azurewebsites.net/"+route;
+      let portIndex = window.location.href.indexOf(":3000");
+      let baseUrl = window.location.href.substring(0, portIndex)
+      window.location.href = baseUrl+":3000/"+route;
     }
   };
 
@@ -64,7 +76,9 @@ const global = function() {
   /* Console.log an AJAX request error
    * functionName example: logout.name
    * jqXHR examplse: $.ajax( . . . error(function(jqXHR)); $.getJSON().fail(function(jqXHR)
-   * DRAWBACKS: The exact line from where the error got logged will be lost, but it is known that logAJAXErr logged it */
+   * DRAWBACKS: ↓
+   * NOT GOOD for anonymous functions (You would need to do something like "const buttonID = this.id" and pass that as the first parameter
+   * The exact line from where the error got logged will be lost, but it will be known that logAJAXErr function logged it */
   const logAJAXErr = function(functionName, jqXHR) {
     console.log(`${logAJAXErr.name} reporting: 
                   ${functionName} AJAX request failed. Details: ↓
@@ -72,15 +86,31 @@ const global = function() {
                   Error thrown: ${jqXHR.statusText}
                   responseText: ↓
                   ${jqXHR.responseText}`);
+
+    /* @returns {duplicatedKey} if the server response contains the phrase in the if includes()
+     ============================================================== */
+    /* Example of how to use the returned "duplicatedKey: ↓
+    *  if(global.logAJAXErr(postAnswer.name, jqXHR) === "duplicatedKey") {
+    *     unfoldingHeader.unfoldHeader("This answer already exists", "red");
+    *  } */
+    if(jqXHR.responseText.includes("Violation of UNIQUE KEY")) {
+      return "duplicatedKey";
+    }
+    // Add your else if here
+    else {
+      return false;
+    }
   };
 
   return {
     fieldNotEmpty: fieldNotEmpty,
     fieldIsEmpty: fieldIsEmpty,
     rmElemFromArray: rmElemFromArray,
+    showLoader: showLoader,
+    hideLoader: hideLoader,
     redirect: redirect,
     logout: logout,
     logAJAXErr: logAJAXErr
-  }
+  };
 }();
 //  ============================================================== */

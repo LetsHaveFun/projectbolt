@@ -1,3 +1,9 @@
+/* JSHint quality control
+ ============================================================== */
+/*jshint esversion: 6 */
+/*jslint devel: true*/
+/*globals unfoldingHeader, global, $:false*/
+
 /* Login NAMESPACE
  ============================================================== */
 const login = function() {
@@ -5,27 +11,43 @@ const login = function() {
   let usernameBox = $('#userNameBox');
   let loginBtn = $('#loginButton');
   let passwordBox = $('#passwordBox');
+  let documentBody = $('body');
 
   const login = function(userdata) {
-      "use strict";
-      $.ajax({
-        type: 'post',
-        data: userdata,
-        url: 'login',
-        success: function(data){
-          sessionStorage.setItem("projectBoltSessionID", data.sessionID);
-          global.redirect("");
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-          unfoldingHeader.unfoldHeader("Login failed", "red", true);
-          console.log('jqXHR: ' + jqXHR);
-          console.log('textStatus: ' + textStatus);
-          console.log('errorThrown: ' + errorThrown);
-        }
-      });
-    };
+    $.ajax({
+      type: 'post',
+      data: userdata,
+      url: 'login',
+      success: function(data){
+        sessionStorage.setItem("projectBoltSessionID", data.sessionID);
+        let sessionID = sessionStorage.getItem('projectBoltSessionID');
+        console.log("Checking banned status");
+        $.getJSON("login/get-banned-status/"+sessionID, function () {})
+        .done(function (bannedJSON) {
+          console.log("Request complete");
+          let banned = bannedJSON[0].Banned;
+          if (!banned) {
+            global.redirect("");
+          }
+          else
+          {
+            global.hideLoader();
+            unfoldingHeader.unfoldHeader("Login failed: You are banned", "red", true);
+          }  
+        })
+        .fail(function () {
+          global.hideLoader();
+          unfoldingHeader.unfoldHeader("Login failed: "+jqXHR.responseText, "red", true);
+        })        
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        global.hideLoader();
+        unfoldingHeader.unfoldHeader("Login failed: "+jqXHR.responseText, "red", true);
+      }
+    });
+  };
 
-  // Display appropriate msg and return a boolean
+  // Display appropriate message and return a boolean
   const noEmptyFields = function() {
     if(global.fieldIsEmpty(usernameBox) && global.fieldIsEmpty(passwordBox)) {
       unfoldingHeader.unfoldHeader("Please fill in your credentials", "orange", true);
@@ -49,9 +71,10 @@ const login = function() {
     usernameBox: usernameBox,
     loginBtn: loginBtn,
     passwordBox: passwordBox,
+    documentBody: documentBody,
     login: login,
     noEmptyFields: noEmptyFields
-  }
+  };
 }();
 //  ============================================================== */
 
@@ -78,27 +101,24 @@ $(document).ready(function() {
             username : login.usernameBox.val(),
             password : login.passwordBox.val()
           };
+
+          global.showLoader();
           // Send the AJAX request
           login.login(userdata);
         }
       });
 
-      // Enter button triggers login on user field
-      login.usernameBox.keyup(function(event) {
+      // Enter button clicked anywhere in the document triggers logging in
+      login.documentBody.keyup(function(event) {
         if(event.keyCode === 13) {
           login.loginBtn.click();
         }
       });
 
-      // Enter button triggers login on password field
-      login.passwordBox.keyup(function(event) {
-        if(event.keyCode === 13) {
-          login.loginBtn.click();
-        }
-      });
+      global.hideLoader();
     }
   })
   .fail(function () {
     console.log("error");
-  })  
+  });
 });

@@ -26,15 +26,13 @@ router.post('/', function(req, res) {
       }
       else
       {
-        res.status(500).send('Authentication failure');  
+        res.status(500).send('Incorrect username/password');  
       }
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason);
+      res.status(500).send(reason.toString());
     });
   }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason);
+    res.status(500).send(reason.toString());
   }); 
 });
 
@@ -54,8 +52,7 @@ router.get('/get-username/:sessionID', function(req, res, next) {
       res.send(username);
     }).catch(
     (reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });
   }
   else {
@@ -63,7 +60,7 @@ router.get('/get-username/:sessionID', function(req, res, next) {
   }    
 });
 
-/* GET user role from session */
+/* GET user is admin or not from session ID */
 router.get('/is-admin/:sessionID', function(req, res, next) {  
   let sessionID = req.params["sessionID"];
   
@@ -73,8 +70,25 @@ router.get('/is-admin/:sessionID', function(req, res, next) {
       res.send(isAdmin);
     }).catch(
     (reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
+    });
+  }
+  else {
+    res.status(500).send('Invalid session');
+  }    
+});
+
+/* GET user is teacher or not from session ID */
+router.get('/is-teacher/:sessionID', function(req, res, next) {  
+  let sessionID = req.params["sessionID"];
+  
+  // Check if the session is valid
+  if (login.sessionValid(sessionID)) {
+    login.isTeacher(sessionID).then((isTeacher) => {
+      res.send(isTeacher);
+    }).catch(
+    (reason) => {
+      res.status(500).send(reason.toString());
     });
   }
   else {
@@ -104,8 +118,7 @@ router.get('/get-usernames-status/:sessionID', function(req, res, next) {
     database.getUsernamesBannedStatus().then((users) => {
       res.json(users);
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });    
   }
   else {
@@ -122,8 +135,7 @@ router.get('/get-banned-status/:sessionID', function(req, res, next) {
     database.getUserBannedStatusById(login.getSessionData(sessionID)["userID"]).then((bannedStatus) => {
       res.send(bannedStatus);
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });
   }
   else {
@@ -132,8 +144,8 @@ router.get('/get-banned-status/:sessionID', function(req, res, next) {
 });
 
 /* Ban a user */
-router.post('/ban-user/:sessionID', function(req, res, next) {
-  let sessionID = req.params["sessionID"];
+router.post('/ban-user', function(req, res, next) {
+  let sessionID = req.body.sessionID;
 
   // Check if the session is valid and user is admin
   if (login.sessionValid(sessionID)) {
@@ -142,16 +154,14 @@ router.post('/ban-user/:sessionID', function(req, res, next) {
         database.banUser(req.body.userID).then(() => {
           res.status(200).send("Ban succesful");
         }).catch((reason) => {
-          console.log('Handle rejected promise ('+reason+') here.');
-          res.status(500).send('Something broke! ' + reason)
+          res.status(500).send(reason.toString());
         }); 
       }
       else {
         res.status(500).send('Unauthorized access');
       }        
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });
   }
   else {
@@ -160,8 +170,8 @@ router.post('/ban-user/:sessionID', function(req, res, next) {
 });
 
 /* Unban a user */
-router.post('/unban-user/:sessionID', function(req, res, next) {
-  let sessionID = req.params["sessionID"];
+router.post('/unban-user', function(req, res, next) {
+  let sessionID = req.body.sessionID;
 
   // Check if the session is valid and user is admin
   if (login.sessionValid(sessionID)) {
@@ -170,16 +180,14 @@ router.post('/unban-user/:sessionID', function(req, res, next) {
         database.unbanUser(req.body.userID).then(() => {
           res.status(200).send("Ban succesful");
         }).catch((reason) => {
-          console.log('Handle rejected promise ('+reason+') here.');
-          res.status(500).send('Something broke! ' + reason)
+          res.status(500).send(reason.toString());
         });  
       }
       else {
         res.status(500).send('Unauthorized access');
       }        
     }).catch((reason) => {
-      console.log('Handle rejected promise ('+reason+') here.');
-      res.status(500).send('Something broke! ' + reason)
+      res.status(500).send(reason.toString());
     });
   }
   else {
